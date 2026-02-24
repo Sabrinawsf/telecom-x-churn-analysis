@@ -1,144 +1,93 @@
-# 📊 Telecom X — Análise de Churn de Clientes
+# Telecom X — Churn Analysis
 
-Projeto de **Análise Exploratória de Dados (EDA)** focado na identificação de padrões relacionados à **evasão de clientes (Churn)** em uma empresa de telecomunicações.
-
-O objetivo deste projeto é transformar dados brutos em **insights estratégicos**, apoiando decisões de negócio voltadas à **retenção de clientes**.
-
----
-
-## 🧠 Contexto de Negócio
-
-O churn representa a perda de clientes ativos e impacta diretamente a receita das empresas de telecom.
-
-Através da análise de dados dos clientes, é possível entender:
-
-- Quais perfis possuem maior risco de cancelamento
-- Quais serviços influenciam a permanência do cliente
-- Em quais momentos do ciclo de vida ocorre maior evasão
-
-Este projeto simula o trabalho de um **Data Analyst atuando em um cenário real de negócio**.
+Análise exploratória e preparação de dados para entender **evasão de clientes (Churn)** no cenário Telecom X.  
+O projeto faz a extração de um dataset em JSON, normaliza estruturas aninhadas, trata inconsistências e gera métricas/estatísticas para apoiar insights sobre churn.
 
 ---
 
-## 🎯 Objetivos do Projeto
+## 🎯 Objetivo
 
-- Realizar ingestão de dados em **formato JSON**
-- Aplicar etapas de **ETL (Extração, Transformação e Limpeza)**
-- Conduzir uma **Análise Exploratória de Dados**
-- Identificar variáveis associadas ao churn
-- Criar novas features relevantes
-- Gerar insights acionáveis para retenção de clientes
+- Carregar e estruturar um dataset de clientes de telecom (JSON com campos aninhados).
+- Realizar limpeza e padronização de dados.
+- Criar uma feature adicional de cobrança diária.
+- Gerar estatísticas descritivas e comparações entre clientes que evadiram e os que permaneceram.
 
 ---
 
-## 🗂️ Estrutura do Repositório
-├── telecom_x_churn.ipynb
-└── README.md
+## 📦 Dataset
+
+O notebook lê o dataset diretamente via URL (JSON):
+
+- Fonte: `TelecomX_Data.json` (GitHub)  
+  URL usada no notebook:  
+  `https://raw.githubusercontent.com/ingridcristh/challenge2-data-science/refs/heads/main/TelecomX_Data.json`
+
+O dataset carregado possui **7.267 registros**.  
+As colunas iniciais incluem `customerID`, `Churn` e campos aninhados em `customer`, `phone`, `internet`, `account`.
 
 ---
 
-## 📘 Fonte dos Dados
+## 🧱 Etapas do Projeto
 
-Os dados foram disponibilizados em formato **JSON**, simulando consumo via API.
+### 1) Extração (Extract)
+- Importação das bibliotecas (pandas, numpy, matplotlib, seaborn).
+- Leitura do JSON via `pd.read_json(url)`.
 
-O dataset contém:
+### 2) Transformação (Transform)
+- Normalização do JSON aninhado com `pd.json_normalize(..., sep='_')`, gerando colunas como:
+  - `customer_gender`, `customer_tenure`
+  - `phone_PhoneService`, `phone_MultipleLines`
+  - `internet_InternetService`, `internet_OnlineSecurity`, etc.
+  - `account_Contract`, `account_Charges_Monthly`, `account_Charges_Total`, etc.
 
-- Informações demográficas dos clientes
-- Tipo de contrato
-- Serviços contratados
-- Tempo de permanência (tenure)
-- Valores mensais e totais
-- Método de pagamento
-- Status de churn (variável alvo)
+- Checagem de:
+  - Valores únicos por coluna (`df.apply(pd.Series.unique)`)
+  - Missing values (`df.isna().sum()`)
 
----
+#### Limpeza e padronização
+- `account_Charges_Total`: substitui valores vazios `" "` por `"0"` e converte para `float`.
+- `Churn`: substitui vazio por `"No"` e remove espaços.
+- Arredondamento:
+  - `account_Charges_Monthly` e `account_Charges_Total` com 2 casas decimais.
 
-## ⚙️ Etapas Realizadas
+#### Feature Engineering
+- Criação de `Contas_Diarias`:
+  - `Contas_Diarias = account_Charges_Monthly / 30` (arredondado em 2 casas)
 
-### 🔹 1. Importação e Tratamento dos Dados
-- Leitura de dados JSON
-- Normalização da estrutura dos dados
-- Ajuste de tipos de variáveis
-- Tratamento de valores ausentes
-- Padronização das colunas
+#### Codificação binária (Yes/No)
+- Padroniza `Yes → 1` e `No → 0` em todo o dataframe.
 
----
-
-### 🔹 2. Análise Exploratória (EDA)
-
-Foram realizadas análises estatísticas e visuais para compreender o comportamento dos clientes:
-
-- Distribuição do churn
-- Relação entre churn e tipo de contrato
-- Impacto do tempo de permanência
-- Análise de serviços contratados
-- Relação entre cobranças mensais e evasão
-
-Visualizações foram utilizadas para facilitar a interpretação dos padrões encontrados.
+### 3) Análise Exploratória (EDA)
+- Estatísticas descritivas com `describe()`.
+- Médias agrupadas por churn:
+  - `df.groupby('Churn').mean(numeric_only=True)`
+- Resumos adicionais (média, mediana, desvio padrão, variância, mínimos e máximos).
 
 ---
 
-## 🔍 Principais Insights
+## ▶️ Como executar
 
-### 📌 Tipo de Contrato
-Clientes com contrato **Month-to-Month** apresentam maior taxa de cancelamento.
+### Opção A — Google Colab
+1. Abra o notebook no Colab.
+2. Execute as células em sequência.
 
-Contratos anuais e bienais demonstram maior retenção.
+### Opção B — Local (Jupyter)
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/Sabrinawsf/telecom-x-churn-analysis.git
+   cd telecom-x-churn-analysis
 
----
+2. Instale as dependências:
 
-### 📌 Tempo de Permanência (Tenure)
-Clientes nos primeiros meses possuem maior probabilidade de churn.
+pip install pandas numpy matplotlib seaborn
 
-➡️ O onboarding do cliente é um período crítico.
+3. Execute o Jupyter Notebook:
 
----
+jupyter notebook
 
-### 📌 Valor Mensal
-Clientes com **maior cobrança mensal** tendem a cancelar mais frequentemente.
+4. Abra o arquivo:
 
----
-
-### 📌 Engajamento com Serviços
-Foi criada a variável:
-
-**Total_Services**
-
-Representando a quantidade total de serviços contratados.
-
-Clientes mais engajados apresentam menor probabilidade de churn.
-
----
-
-## 🧩 Feature Engineering
-
-Feature criada durante a análise:
-
-✅ **Total_Services**
-
-Utilizada como indicador de engajamento e potencial variável explicativa para futuros modelos preditivos.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- Python
-- Pandas
-- NumPy
-- Matplotlib
-- Seaborn
-- Jupyter Notebook
-- Git & GitHub
-
----
-
-## 📈 Possíveis Evoluções
-
-- Preparação do dataset para Machine Learning
-- Modelos de previsão de churn
-- Segmentação de clientes por risco
-- Criação de estratégias de retenção baseadas em dados
-
+telecom_x_churn.ipynb
 ---
 
 ## 👩‍💻 Sobre Mim
